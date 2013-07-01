@@ -19,11 +19,33 @@
 //    var sections = $('div.section');
 //
 //    sections
-//        .on('whenonscreen whenoffscreen', function (e) {
+//        .on('whenonscreen whenoffscreen', function (event) {
 //            // do stuff to .section when it moves on/off screen
 //          });
 //
-//    // Configuration:
+//    The `event` object has the following properties:
+//      * type        String - 'when(on|off)screen',
+//      * range       A normalized version of the 'range' object that triggered this event,
+//                    Examples:
+//                      whenonscreen:
+//                        { top:-100, bottom:-300, left:0, right:40,   customVal:'foo', name:'customval' },
+//                        { radius:50, top:50, bottom:50, left:50, right:50  },
+//                      whenoffscreen:
+//                        { top:-100, bottom:-300, left:0, right:40,   customVal:'foo', navElm:[Object] },
+//      * scrTop      Number - Current window/viewport boundries in pixels
+//        scrBottom
+//        scrLeft
+//        scrRight
+//      * elmTop      Number -  Current element boundries in pixels
+//        elmBottom
+//        elmLeft
+//        elmRight
+//      * leftright   Boolean - is horizontal boundry checking enabled for this element
+//      * live        Boolean - is element position + size recalculated every time?
+//
+//
+//
+//    // Configuration:  =======================================================
 //
 //    // Set custom throttle time (time between recalculations on scroll/resize) (default: 50ms)
 //    sections.whenOnScreen.throttle = 200;
@@ -32,7 +54,8 @@
 //    // Set default ranges (default: 50 --> [{ radius:50 }] )
 //    sections.whenOnScreen.ranges = [{ radius:100 }];
 //
-//    // initializations:
+//
+//    // Configuration:  =======================================================
 //
 //    // default options: single 'range' with radius of 50px (offscreen)
 //    sections.whenOnScreen();
@@ -62,8 +85,10 @@
 //            ]
 //        });
 //
+//
 //    // Stop monitoring one or more of the elements
 //    sections.eq(3).whenOnScreen( 'stop' );
+//
 //
 //    // For elements that are not "live" measured - you can
 //    // request 'recalc'ulation of their size/position
