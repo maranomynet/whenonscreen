@@ -32,13 +32,13 @@
 //                        { top:-100, bottom:-300, left:0, right:40,   foo:'bar', navElm:[Object] },
 //                        { radius:50, top:50, bottom:50, left:50, right:50  },
 //      * scrTop      Number - Current window/viewport boundries in pixels
-//        scrBottom
-//        scrLeft
-//        scrRight
+//        scrBottom   ...
+//        scrLeft     ...
+//        scrRight    ...
 //      * elmTop      Number -  Current element boundries in pixels
-//        elmBottom
-//        elmLeft
-//        elmRight
+//        elmBottom   ...
+//        elmLeft     ...
+//        elmRight    ...
 //      * leftright   Boolean - is horizontal boundry checking enabled for this element
 //      * live        Boolean - is element position + size recalculated every time?
 //
