@@ -29,9 +29,8 @@
 //                    Examples:
 //                      whenonscreen:
 //                        { top:-100, bottom:-300, left:0, right:40,   customVal:'foo', name:'customval' },
+//                        { top:-100, bottom:-300, left:0, right:40,   foo:'bar', navElm:[Object] },
 //                        { radius:50, top:50, bottom:50, left:50, right:50  },
-//                      whenoffscreen:
-//                        { top:-100, bottom:-300, left:0, right:40,   customVal:'foo', navElm:[Object] },
 //      * scrTop      Number - Current window/viewport boundries in pixels
 //        scrBottom
 //        scrLeft
