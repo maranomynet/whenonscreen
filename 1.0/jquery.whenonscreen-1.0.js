@@ -47,11 +47,11 @@
 //    // Configuration:  =======================================================
 //
 //    // Set custom throttle time (time between recalculations on scroll/resize) (default: 50ms)
-//    sections.whenOnScreen.throttle = 200;
+//    $.whenOnScreen.throttle = 200;
 //    // Indicate that left/right boundries should also be checked by default (default: false)
-//    sections.whenOnScreen.leftright = true;
+//    $.whenOnScreen.leftright = true;
 //    // Set default ranges (default: 50 --> [{ radius:50 }] )
-//    sections.whenOnScreen.ranges = [{ radius:100 }];
+//    $.whenOnScreen.ranges = [{ radius:100 }];
 //
 //
 //    // Configuration:  =======================================================
@@ -79,7 +79,7 @@
 //          leftright: true,
 //          ranges: [
 //              { name:'lazyload',  radius:100,   customData:{foo:1} },
-//              { name:'animate',   live:true,  top:-100, bottom:-300, left:0, right:40 },
+//              { name:'animate',   top:-100, bottom:-300, left:0, right:40 },
 //              { name:'foo',       radius:50, bottom:-75 },
 //            ]
 //        });
@@ -88,7 +88,6 @@
 //    // Stop monitoring one or more of the elements
 //    sections.eq(3).whenOnScreen( 'stop' );
 //
-//
 //    // For elements that are not "live" measured - you can
 //    // request 'recalc'ulation of their size/position
 //    // triggering on-/off-screen events when neccessary
@@ -96,7 +95,7 @@
 //
 //
 //    // Running the plugin again with new options will
-//    // update the options for each element and instantly
+//    // update (i.e. overwrite) the options for each element and instantly
 //    // revaluate their status on-/off-screen - firing events when neccessary
 //    sections.whenOnScreen( myNewOptionsObj );
 //
