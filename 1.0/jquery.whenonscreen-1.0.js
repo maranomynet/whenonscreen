@@ -175,15 +175,15 @@
             method = opts;
             opts = arguments[1];
           }
+          opts = $.extend({
+                    // live:   false,
+                    // ranges: $.whenOnScreen.range
+                  }, opts);
 
           if ( method === 'run')
           {
             // Normalize the options and apply defaults.
             // We can safely skip this if method is 'stop' or 'recalc'
-            opts = opts || {
-                // live:   false,
-                // ranges: $.whenOnScreen.range
-              };
             ranges =  opts.ranges!=null ?
                           opts.ranges:
                       globalCfg.ranges!=null ?
@@ -206,8 +206,8 @@
 
           this.each(function () {
               var elm = this,
-                  idx = $.inArray(elements, elm),
-                  elmExisted = idx > 0;
+                  idx = $.inArray(elm, elements),
+                  elmExisted = idx > -1;
 
               if ( method === 'stop' )
               {
@@ -234,7 +234,7 @@
                   if ( !elmExisted ) {
                     elements.push(elm);
                     elementDatas.push(data);
-                    data.elm = elm = $(elm);
+                    data.elm = $(elm);
                   }
                   data.leftright = !!opts.leftright || !!globalCfg.leftright;
                   data.live =      !!opts.live;
@@ -248,13 +248,14 @@
                   // Measure the element's current dimensions and position
                   // Skip this if opts.live (because then it happens inside checkElements())
                   // Skip this if element already existed -- unless we've explicitly asked for 'recalc'
-                  var offs = data.elm.offset();
+                  var dataElm = data.elm,
+                      offs = dataElm.offset();
                   data.elmTop =    offs.top;
-                  data.elmBottom = offs.top + elm.outerHeight();
+                  data.elmBottom = offs.top + dataElm.outerHeight();
                   if ( data.leftright )
                   {
                     data.elmLeft =  offs.left;
-                    data.elmRight = offs.left + elm.outerWidth();
+                    data.elmRight = offs.left + dataElm.outerWidth();
                   }
                 }
                 if ( method === 'run' || !data.live )
