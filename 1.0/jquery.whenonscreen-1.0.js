@@ -93,6 +93,9 @@
 //    // triggering on-/off-screen events when neccessary
 //    sections.eq(3).whenOnScreen( 'recalc' );
 //
+//    // Update the data/config object (takes effect on next 'recalc'/scroll/resize)
+//    var config = sections.eq(3).whenOnScreen( 'data' );
+//    config.ranges[0].top = 100;
 //
 //    // Running the plugin again with new options will
 //    // update (i.e. overwrite) the options for each element and instantly
@@ -204,6 +207,7 @@
             }
           }
 
+          var retValue = this;
           this.each(function () {
               var elm = this,
                   idx = $.inArray(elm, elements),
@@ -226,6 +230,11 @@
                 if ( elmExisted )
                 {
                   data = elementDatas[idx];
+                }
+                if ( method === 'data' )
+                {
+                  retValue = elmExisted ? data : undefined; // make the plugin return the data of the first item
+                  return false;    // immediately exit this.each() loop
                 }
                 if ( method !== 'recalc' )
                 {
@@ -264,6 +273,7 @@
                   // as the live elements may be considered up to date and correct
                   checkElements([ data ]);
                 }
+                // WARNING: Early return above!
               }
             });
 
@@ -282,7 +292,7 @@
             scrollEvSet = true;
           }
 
-          return this;
+          return retValue;
       };
 
 
