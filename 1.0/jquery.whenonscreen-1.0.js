@@ -274,7 +274,11 @@
           }
           else if ( !scrollEvSet )
           {
-            $win.on('scroll.whenOnScreen resize.whenOnScreen', $.throttleFn(checkElements, true, globalCfg.throttle) );
+            $win.on('scroll.whenOnScreen resize.whenOnScreen',
+                globalCfg.throttle ?
+                    $.throttleFn(checkElements, true, globalCfg.throttle):
+                    checkElements
+              );
             scrollEvSet = true;
           }
 
