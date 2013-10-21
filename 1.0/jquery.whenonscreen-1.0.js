@@ -16,7 +16,7 @@
 //
 //
 // Optional dependency:
-//    * $.throttleFn() -- https://github.com/maranomynet/throttlefn
+//    * $.throttleFn() -- https://gist.github.com/maranomynet/7090772
 //
 //
 //
