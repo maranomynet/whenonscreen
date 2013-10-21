@@ -4,13 +4,19 @@
 // (c) 2010-2013 Hugsmiðjan ehf  -- http://www.hugsmidjan.is
 //  written by:
 //   * Már Örlygsson        -- http://mar.anomy.net
+//
+// Dual licensed under a MIT licence (http://en.wikipedia.org/wiki/MIT_License)
+// and GPL 2.0 or above (http://www.gnu.org/licenses/old-licenses/gpl-2.0.html).
+// More info: https://github.com/maranomynet/whenonscreen/
 // ----------------------------------------------------------------------------------
 //
 // jQuery.fn.whenOnScreen() v. 1.0 -- monitors if elements are positioned within page's scroll window
-// and triggers a 'whenonscreen' and 'whenoffscreen' events on each element when it crosses the window boundry
+// and triggers a 'whenonscreen' and 'whenoffscreen' events for each element as it crosses a set distance
+// (or one of several distances) from the viewport boundry
 //
-// Requires:
-//    * eutil1.2+  ( $.throttleFn() )
+//
+// Optional dependency:
+//    * $.throttleFn() -- https://github.com/maranomynet/throttlefn
 //
 //
 //
@@ -21,16 +27,17 @@
 //    sections
 //        .on('whenonscreen whenoffscreen', function (event) {
 //            // do stuff to .section when it moves on/off screen
+//            // ...or more precisely - when it moves in/out of each
+//            // of its configured "range" objects (see below).
 //          });
 //
 //    The `event` object has the following properties:
 //      * type        String - 'when(on|off)screen',
 //      * range       A normalized version of the 'range' object that triggered this event,
 //                    Examples:
-//                      whenonscreen:
-//                        { top:-100, bottom:-300, left:0, right:40,   customVal:'foo', name:'customval' },
-//                        { top:-100, bottom:-300, left:0, right:40,   foo:'bar', navElm:[Object] },
-//                        { radius:50, top:50, bottom:50, left:50, right:50  },
+//                     a) { top:-100, bottom:-300, left:0, right:40,   customVal:'foo' },
+//                     b) { top:-100, bottom:-300, left:0, right:40,   customElm:[Object] },
+//                     c) { radius:50, top:50, bottom:50, left:50, right:50  },
 //      * scrTop      Number - Current window/viewport boundries in pixels
 //        scrBottom   ...
 //        scrLeft     ...
@@ -44,13 +51,13 @@
 //
 //
 //
-//    // Configuration:  =======================================================
+//    // Global Configuration:  ================================================
 //
 //    // Set custom throttle time (time between recalculations on scroll/resize) (default: 50ms)
 //    $.whenOnScreen.throttle = 200;
 //    // Indicate that left/right boundries should also be checked by default (default: false)
 //    $.whenOnScreen.leftright = true;
-//    // Set default ranges (default: 50 --> [{ radius:50 }] )
+//    // Set a default range (default: 50 --> [{ radius:50 }] )
 //    $.whenOnScreen.ranges = [{ radius:100 }];
 //
 //
@@ -285,7 +292,7 @@
           else if ( !scrollEvSet )
           {
             $win.on('scroll.whenOnScreen resize.whenOnScreen',
-                globalCfg.throttle ?
+                $.throttleFn && globalCfg.throttle ?
                     $.throttleFn(checkElements, true, globalCfg.throttle):
                     checkElements
               );
