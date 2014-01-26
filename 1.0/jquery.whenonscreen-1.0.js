@@ -55,7 +55,7 @@
 //        isElmRight  ...
 //        isElmLeft   ...
 //      * leftright   Boolean - is horizontal boundry checking enabled for this element
-//      * live        Boolean - is element position + size recalculated every time?
+//      * recalc      Boolean - was element position + size recalculated this time?
 //
 //
 //
@@ -145,10 +145,11 @@
         $win = $(window),
         scrollEvSet,
         globalCfg = $.whenOnScreen = {
+            recalcOnResize: true,
             live:       false,
             leftright:  false,
             range:      [{ radius:50 }],
-            throttle:   50,
+            throttle:   50
           },
 
         _percStrToFunc = function (rangeStr, side) {
@@ -160,9 +161,9 @@
                       parseInt(rangeStr, 10) || 0;
           },
 
-        _getRangeValue = function (range, rangeFn, sizes, side) {
+        _getRangeValue = function (range, rangeFn, recalc, sizes, side) {
             var cacheKey = '_'+side;
-            return !sizes.live && (range[cacheKey]!=null) ?
+            return !recalc && (range[cacheKey]!=null) ?
                       range[cacheKey]: // return cached value
                       (range[cacheKey] = rangeFn(sizes, side)); // set cache to calculated value
           },
@@ -172,24 +173,24 @@
         lastScrTop,
         lastScrLeft,
 
-        checkElements = function (elmDatasToCheck) {
+        checkElements = function (e) {
             var scrTop = $win.scrollTop(),
                 scrHeight = $win.height(),
                 scrBottom = scrTop + scrHeight,
                 scrLeft,  // undefined until at least one element requires it.
                 scrWidth,
-                scrRight; // undefined until at least one element requires it.
-            elmDatasToCheck = elmDatasToCheck.push ? // check for .push elmDatasToCheck might be an event object
-                                  elmDatasToCheck:
+                scrRight, // undefined until at least one element requires it.
+                elmDatasToCheck = e.push ? // sometimes checkElements() is invoded directly for a subset of all elements.
+                                  e:
                                   elementDatas;
             for (var i=0, data; (data = elmDatasToCheck[i]); i++)
             {
               var elm = data.elm,
-                  live = data.live,
-                  offs = live && elm.offset(),
-                  elmTop =    live ? offs.top : data.elmTop,
-                  elmHeight = live ? elm.outerHeight() : data.elmHeight,
-                  elmBottom = live ? elmTop + elmHeight : data.elmBottom,
+                  recalc = data.live || (globalCfg.recalcOnResize && e.type === 'resize'),
+                  offs = recalc && elm.offset(),
+                  elmTop =    recalc ? offs.top : data.elmTop,
+                  elmHeight = recalc ? elm.outerHeight() : data.elmHeight,
+                  elmBottom = recalc ? elmTop + elmHeight : data.elmBottom,
                   elmLeft,
                   elmWidth,
                   elmRight;
@@ -201,36 +202,35 @@
                   scrWidth  = $win.width();
                   scrRight = scrLeft + scrWidth;
                 }
-                elmLeft  = live ? offs.left : data.elmLeft;
-                elmWidth = live ? elm.outerWidth() : data.elmWidth;
-                elmRight = live ? elmLeft + elmWidth : data.elmRight;
+                elmLeft  = recalc ? offs.left : data.elmLeft;
+                elmWidth = recalc ? elm.outerWidth() : data.elmWidth;
+                elmRight = recalc ? elmLeft + elmWidth : data.elmRight;
               }
 
               var ev = {
-                      scrTop:    scrTop,
-                      scrHeight: scrHeight,
-                      scrBottom: scrBottom,
-                      scrLeft:   scrLeft,   // undefined unless data.leftright
-                      scrWidth:  scrWidth,  // undefined unless data.leftright
-                      scrRight:  scrRight,  // undefined unless data.leftright
+                      scrTop:      scrTop,
+                      scrHeight:   scrHeight,
+                      scrBottom:   scrBottom,
+                      scrLeft:     scrLeft,   // undefined unless data.leftright
+                      scrWidth:    scrWidth,  // undefined unless data.leftright
+                      scrRight:    scrRight,  // undefined unless data.leftright
 
-                      elmTop:    elmTop,
-                      elmHeight: elmHeight,
-                      elmBottom: elmBottom,
-                      elmLeft:   elmLeft,   // undefined unless data.leftright
-                      elmWidth:  elmWidth,  // undefined unless data.leftright
-                      elmRight:  elmRight,  // undefined unless data.leftright
+                      elmTop:      elmTop,
+                      elmHeight:   elmHeight,
+                      elmBottom:   elmBottom,
+                      elmLeft:     elmLeft,   // undefined unless data.leftright
+                      elmWidth:    elmWidth,  // undefined unless data.leftright
+                      elmRight:    elmRight,  // undefined unless data.leftright
 
-                      //isElmBelow: Boolean    // set below
-                      //isElmAbove: Boolean    // set below
-                      //isElmRight: Boolean    // set below
-                      //isElmLeft:  Boolean    // set below
+                      //isElmBelow:  Boolean    // set below
+                      //isElmAbove:  Boolean    // set below
+                      //isElmRight:  Boolean    // set below
+                      //isElmLeft:   Boolean    // set below
 
                       lastScrTop:  lastScrTop,  // undefined during first run
                       lastScrLeft: lastScrLeft, // undefined during first run
 
-                      leftright: data.leftright,
-                      live:      data.live
+                      leftright:   data.leftright
                     },
                   j = 0,
                   range;
@@ -241,8 +241,8 @@
                     rTop = range.top,
                     rBottom = range.bottom;
 
-                rTop.call && (rTop = _getRangeValue(range, rTop, ev, 'top'));
-                rBottom.call && (rBottom = _getRangeValue(range, rBottom, ev,'bottom'));
+                rTop.call && (rTop = _getRangeValue(range, rTop, recalc, ev, 'top'));
+                rBottom.call && (rBottom = _getRangeValue(range, rBottom, recalc, ev,'bottom'));
 
                 ev.isElmBelow = elmTop-rTop >= scrBottom;
                 ev.isElmAbove = scrTop >= elmBottom+rBottom;
@@ -253,8 +253,8 @@
                   var rLeft = range.left,
                       rRight = range.right;
 
-                  rLeft.call && (rLeft = _getRangeValue(range, rLeft, ev, 'left'));
-                  rRight.call && (rRight = _getRangeValue(range, rRight, ev,'right'));
+                  rLeft.call && (rLeft = _getRangeValue(range, rLeft, recalc, ev, 'left'));
+                  rRight.call && (rRight = _getRangeValue(range, rRight, recalc, ev,'right'));
 
                   ev.isElmRight =  elmLeft-rLeft >= scrRight;
                   ev.isElmLeft = scrLeft >= elmRight+rRight;
