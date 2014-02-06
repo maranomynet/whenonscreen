@@ -103,6 +103,7 @@
 //        ranges: function(sizes, side){
 //            // same as the shorthand '-25%e' above
 //            var dimension = /Top|Bottom/.test(side) ? 'Height' : 'Width';
+//            // var $elm = sizes.$elm; // jQuery collection containing the target element
 //            return: -.25 * sizes['elm'+dimension];
 //          }
 //    });
@@ -215,6 +216,7 @@
                       scrWidth:    scrWidth,  // undefined unless data.leftright
                       scrRight:    scrRight,  // undefined unless data.leftright
 
+                      $elm:         elm,
                       elmTop:      elmTop,
                       elmHeight:   elmHeight,
                       elmBottom:   elmBottom,
