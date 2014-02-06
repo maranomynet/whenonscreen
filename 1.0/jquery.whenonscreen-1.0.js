@@ -9,138 +9,140 @@
 // and GPL 2.0 or above (http://www.gnu.org/licenses/old-licenses/gpl-2.0.html).
 // More info: https://github.com/maranomynet/whenonscreen/
 // ----------------------------------------------------------------------------------
-//
-// jQuery.fn.whenOnScreen() v. 1.0 -- monitors if elements are positioned within page's scroll window
-// and triggers a 'whenonscreen' and 'whenoffscreen' events for each element as it crosses a set distance
-// (or one of several distances) from the viewport boundry
-//
-//
-// Optional dependency:
-//    * $.throttleFn() -- https://gist.github.com/maranomynet/7090772
-//
-//
-//
-//  Usage:
-//
-//    var sections = $('div.section');
-//
-//    sections
-//        .on('whenonscreen whenoffscreen', function (event) {
-//            // do stuff to .section when it moves on/off screen
-//            // ...or more precisely - when it moves in/out of each
-//            // of its configured "range" objects (see below).
-//          });
-//
-//    The `event` object has the following properties:
-//      * type        String - 'when(on|off)screen',
-//      * range       A normalized version of the 'range' object that triggered this event,
-//                    Examples:
-//                     a) { top:-100, bottom:-300, left:0, right:40,   customVal:'foo' },
-//                     b) { top:-100, bottom:-300, left:0, right:40,   customElm:[Object] },
-//                     c) { radius:50, top:50, bottom:50, left:50, right:50  },
-//      * scrTop      Number - Current window/viewport boundries in pixels
-//        srcHeight   ...
-//        scrBottom   ...
-//        scrLeft     ... (if leftright is enabled)
-//        srcWidth    ... (if leftright is enabled)
-//        scrRight    ... (if leftright is enabled)
-//      * elmTop      Number -  Current element boundries in pixels
-//        elmHeight   ...
-//        elmBottom   ...
-//        elmLeft     ... (if leftright is enabled)
-//        elmWidth    ... (if leftright is enabled)
-//        elmRight    ... (if leftright is enabled)
-//      * isElmBelow  Boolean - is the element outside (below|above|right of|left of) the viewport
-//        isElmAbove  ...
-//        isElmRight  ...
-//        isElmLeft   ...
-//      * leftright   Boolean - is horizontal boundry checking enabled for this element
-//      * recalc      Boolean - was element position + size recalculated this time?
-//
-//
-//
-//    // Global Configuration:  ================================================
-//
-//    // Set custom throttle time (time between recalculations on scroll/resize) (default: 50ms)
-//    $.whenOnScreen.throttle = 200;
-//    // Indicate that left/right boundries should also be checked by default (default: false)
-//    $.whenOnScreen.leftright = true;
-//    // Set the list of default range objects (default: `[{ radius:50 }]` )
-//    $.whenOnScreen.ranges = [ { radius:100, top: -50 } ];
-//    // Disable caching of element offsets and dimensions.
-//    $.whenOnScreen.live = true;
-//
-//
-//    // Configuration:  =======================================================
-//
-//    // default options: single 'range' with radius of 50px (offscreen)
-//    sections.whenOnScreen();
-//
-//    // Indicate that for this set of elements left/right boundries should also be checked
-//    sections.whenOnScreen({ leftright:true });
-//
-//    // Ask that size/position for these elements should be measured
-//    // on every scroll/window.resize event (default: false)
-//    sections.whenOnScreen({ live:true });
-//
-//    // single 'range' with radius of 100px (offscreen)
-//    sections.whenOnScreen({ ranges:100 });
-//
-//    // single 'range' with radius of 100px (offscreen)
-//    sections.whenOnScreen({ ranges:[{ radius:100 }] });
-//
-//    // single 'range' with radius of 25% af viewport size
-//    // (counts as onscreen when edge of the element has entered 25% of screen dimension)
-//    sections.whenOnScreen({ ranges: '-25%s' });
-//
-//    // single 'range' with radius of 25% af element size
-//    // (counts as onscreen when more than 25% of the element is visible)
-//    sections.whenOnScreen({ ranges: '-25%e' });
-//
-//    // single 'range' calculated per element by a dynamic function.
-//    // (The function's return value is cached unless "live" flag is true)
-//    sections.whenOnScreen({
-//        ranges: function(sizes, side){
-//            // same as the shorthand '-25%e' above
-//            var dimension = /Top|Bottom/.test(side) ? 'Height' : 'Width';
-//            // var $elm = sizes.$elm; // jQuery collection containing the target element
-//            return: -.25 * sizes['elm'+dimension];
-//          }
-//    });
-//
-//    // single 'range' with varying radii
-//    sections.whenOnScreen({ ranges:[{ top:100, bottom:-100, left:50, right:-50 }] });
-//
-//    // multiple named 'ranges' with some custom data included
-//    sections.whenOnScreen({
-//          leftright: true,
-//          ranges: [
-//              { name:'lazyload',  radius:100,   customData:{foo:1} },
-//              { name:'animate',   top:-100, bottom:-300, left:0, right:40 },
-//              { name:'foo',       radius:50, bottom:-75 },
-//            ]
-//        });
-//
-//
-//    // Stop monitoring one or more of the elements
-//    sections.eq(3).whenOnScreen( 'stop' );
-//
-//    // For elements that are not "live" measured - you can
-//    // request 'recalc'ulation of their size/position
-//    // triggering on-/off-screen events when neccessary
-//    sections.eq(3).whenOnScreen( 'recalc' );
-//
-//    // Update the data/config object (takes effect on next 'recalc'/scroll/resize)
-//    var config = sections.eq(3).whenOnScreen( 'data' );
-//    config.ranges[0].top = 100;
-//
-//    // Running the plugin again with new options will
-//    // update (i.e. overwrite) the options for each element and instantly
-//    // revaluate their status on-/off-screen - firing events when neccessary
-//    sections.whenOnScreen( myNewOptionsObj );
-//
-//
-//
+
+/** /
+
+  // jQuery.fn.whenOnScreen() v. 1.0 -- monitors if elements are positioned within page's scroll window
+  // and triggers a 'whenonscreen' and 'whenoffscreen' events for each element as it crosses a set distance
+  // (or one of several distances) from the viewport boundry
+
+
+  // Optional dependency:
+  //   * $.throttleFn() -- https://gist.github.com/maranomynet/7090772
+
+
+
+  // Usage:
+
+    var sections = $('div.section');
+
+    sections
+        .on('whenonscreen whenoffscreen', function (event) {
+            // do stuff to .section when it moves on/off screen
+            // ...or more precisely - when it moves in/out of each
+            // of its configured "range" objects (see below).
+          });
+
+    // The `event` object has the following properties:
+    //   * type        String - 'when(on|off)screen',
+    //   * range       A normalized version of the 'range' object that triggered this event,
+    //                 Examples:
+    //                  a) { top:-100, bottom:-300, left:0, right:40,   customVal:'foo' },
+    //                  b) { top:-100, bottom:-300, left:0, right:40,   customElm:[Object] },
+    //                  c) { radius:50, top:50, bottom:50, left:50, right:50  },
+    //   * scrTop      Number - Current window/viewport boundries in pixels
+    //     srcHeight   ...
+    //     scrBottom   ...
+    //     scrLeft     ... (if leftright is enabled)
+    //     srcWidth    ... (if leftright is enabled)
+    //     scrRight    ... (if leftright is enabled)
+    //   * elmTop      Number -  Current element boundries in pixels
+    //     elmHeight   ...
+    //     elmBottom   ...
+    //     elmLeft     ... (if leftright is enabled)
+    //     elmWidth    ... (if leftright is enabled)
+    //     elmRight    ... (if leftright is enabled)
+    //   * isElmBelow  Boolean - is the element outside (below|above|right of|left of) the viewport
+    //     isElmAbove  ...
+    //     isElmRight  ...
+    //     isElmLeft   ...
+    //   * leftright   Boolean - is horizontal boundry checking enabled for this element
+    //   * recalc      Boolean - was element position + size recalculated this time?
+
+
+
+    // Global Configuration:  ================================================
+
+    // Set custom throttle time (time between recalculations on scroll/resize) (default: 50ms)
+    $.whenOnScreen.throttle = 200;
+    // Indicate that left/right boundries should also be checked by default (default: false)
+    $.whenOnScreen.leftright = true;
+    // Set the list of default range objects (default: `[{ radius:50 }]` )
+    $.whenOnScreen.ranges = [ { radius:100, top: -50 } ];
+    // Disable caching of element offsets and dimensions.
+    $.whenOnScreen.live = true;
+
+
+    // Configuration:  =======================================================
+
+    // default options: single 'range' with radius of 50px (offscreen)
+    sections.whenOnScreen();
+
+    // Indicate that for this set of elements left/right boundries should also be checked
+    sections.whenOnScreen({ leftright:true });
+
+    // Ask that size/position for these elements should be measured
+    // on every scroll/window.resize event (default: false)
+    sections.whenOnScreen({ live:true });
+
+    // single 'range' with radius of 100px (offscreen)
+    sections.whenOnScreen({ ranges:100 });
+
+    // single 'range' with radius of 100px (offscreen)
+    sections.whenOnScreen({ ranges:[{ radius:100 }] });
+
+    // single 'range' with radius of 25% af viewport size
+    // (counts as onscreen when edge of the element has entered 25% of screen dimension)
+    sections.whenOnScreen({ ranges: '-25%s' });
+
+    // single 'range' with radius of 25% af element size
+    // (counts as onscreen when more than 25% of the element is visible)
+    sections.whenOnScreen({ ranges: '-25%e' });
+
+    // single 'range' calculated per element by a dynamic function.
+    // (The function's return value is cached unless "live" flag is true)
+    sections.whenOnScreen({
+        ranges: function(sizes, side){
+            // same as the shorthand '-25%e' above
+            var dimension = /Top|Bottom/.test(side) ? 'Height' : 'Width';
+            // var $elm = sizes.$elm; // jQuery collection containing the target element
+            return: -.25 * sizes['elm'+dimension];
+          }
+    });
+
+    // single 'range' with varying radii
+    sections.whenOnScreen({ ranges:[{ top:100, bottom:-100, left:50, right:-50 }] });
+
+    // multiple named 'ranges' with some custom data included
+    sections.whenOnScreen({
+          leftright: true,
+          ranges: [
+              { name:'lazyload',  radius:100,   customData:{foo:1} },
+              { name:'animate',   top:-100, bottom:-300, left:0, right:40 },
+              { name:'foo',       radius:50, bottom:-75 },
+            ]
+        });
+
+
+    // Stop monitoring one or more of the elements
+    sections.eq(3).whenOnScreen( 'stop' );
+
+    // For elements that are not "live" measured - you can
+    // request 'recalc'ulation of their size/position
+    // triggering on-/off-screen events when neccessary
+    sections.eq(3).whenOnScreen( 'recalc' );
+
+    // Update the data/config object (takes effect on next 'recalc'/scroll/resize)
+    var config = sections.eq(3).whenOnScreen( 'data' );
+    config.ranges[0].top = 100;
+
+    // Running the plugin again with new options will
+    // update (i.e. overwrite) the options for each element and instantly
+    // revaluate their status on-/off-screen - firing events when neccessary
+    sections.whenOnScreen( myNewOptionsObj );
+
+/**/
+
 (function($){
     var
         $win = $(window),
