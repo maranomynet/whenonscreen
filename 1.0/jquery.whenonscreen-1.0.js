@@ -191,12 +191,13 @@
               var elm = data.elm,
                   recalc = data.live || (globalCfg.recalcOnResize && e.type === 'resize'),
                   offs = recalc && elm.offset(),
-                  elmTop =    recalc ? offs.top : data.elmTop,
-                  elmHeight = recalc ? elm.outerHeight() : data.elmHeight,
-                  elmBottom = recalc ? elmTop + elmHeight : data.elmBottom,
+                  elmTop =    recalc ? (data.elmTop = offs.top) : data.elmTop,
+                  elmHeight = recalc ? (data.elmHeight = elm.outerHeight()) : data.elmHeight,
+                  elmBottom = recalc ? (data.elmBottom = elmTop + elmHeight) : data.elmBottom,
                   elmLeft,
                   elmWidth,
                   elmRight;
+
               if ( data.leftright )
               {
                 if ( !i )
@@ -205,9 +206,9 @@
                   scrWidth  = $win.width();
                   scrRight = scrLeft + scrWidth;
                 }
-                elmLeft  = recalc ? offs.left : data.elmLeft;
-                elmWidth = recalc ? elm.outerWidth() : data.elmWidth;
-                elmRight = recalc ? elmLeft + elmWidth : data.elmRight;
+                elmLeft  = recalc ? (data.elmLeft = offs.left) : data.elmLeft;
+                elmWidth = recalc ? (data.elmWidth = elm.outerWidth()) : data.elmWidth;
+                elmRight = recalc ? (data.elmRight = elmLeft + elmWidth) : data.elmRight;
               }
 
               var ev = {
