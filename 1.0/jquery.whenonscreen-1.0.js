@@ -67,10 +67,12 @@
     $.whenOnScreen.throttle = 200;
     // Indicate that left/right boundries should also be checked by default (default: false)
     $.whenOnScreen.leftright = true;
-    // Set the list of default range objects (default: `[{ radius:50 }]` )
-    $.whenOnScreen.ranges = [ { radius:100, top: -50 } ];
-    // Disable caching of element offsets and dimensions.
+    // Set the list of default range objects (default: `{ visible:{ radius:50 } }` )
+    $.whenOnScreen.ranges = { visible:{ radius:100, top: -50 } };
+    // Disable clever caching of element offsets and dimensions.
     $.whenOnScreen.live = true;
+    // Turns on namespace events - instead . (default: false)
+    $.whenOnScreen.nsEvents = true;
 
 
     // Configuration:  =======================================================
@@ -89,7 +91,7 @@
     sections.whenOnScreen({ ranges:100 });
 
     // single 'range' with radius of 100px (offscreen)
-    sections.whenOnScreen({ ranges:[{ radius:100 }] });
+    sections.whenOnScreen({ ranges:{ visible:{radius:100} } });
 
     // single 'range' with radius of 25% af viewport size
     // (counts as onscreen when edge of the element has entered 25% of screen dimension)
@@ -111,16 +113,17 @@
     });
 
     // single 'range' with varying radii
-    sections.whenOnScreen({ ranges:[{ top:100, bottom:-100, left:50, right:-50 }] });
+    sections.whenOnScreen({ ranges:{ visible:{ top:100, bottom:-100, left:50, right:-50 } } });
 
     // multiple named 'ranges' with some custom data included
+    $.whenOnScreen.nsEvents = true;  // <-- required to bind event-handlers for individual range-names
     sections.whenOnScreen({
           leftright: true,
-          ranges: [
-              { name:'lazyload',  radius:100,   customData:{foo:1} },
-              { name:'animate',   top:-100, bottom:-300, left:0, right:40 },
-              { name:'foo',       radius:50, bottom:-75 },
-            ]
+          ranges: {
+              lazyload: { radius:100,   customData:{foo:1} },
+              animate:  { top:-100, bottom:-300, left:0, right:40 },
+              foo:      { radius:50, bottom:-75 },
+            }
         });
 
 
@@ -148,10 +151,11 @@
         $win = $(window),
         scrollEvSet,
         globalCfg = $.whenOnScreen = {
+            nsEvents:   false,
             recalcOnResize: true,
             live:       false,
             leftright:  false,
-            range:      [{ radius:50 }],
+            range:      { visible: { radius:50 } },
             throttle:   50
           },
 
@@ -183,17 +187,19 @@
                 scrLeft,  // undefined until at least one element requires it.
                 scrWidth,
                 scrRight, // undefined until at least one element requires it.
-                elmDatasToCheck = e.push ? // sometimes checkElements() is invoded directly for a subset of all elements.
+                directInvocation = !e.type,
+                doRecalculate =  directInvocation || (globalCfg.recalcOnResize && e.type === 'resize'),
+                elmDatasToCheck = directInvocation ? // sometimes checkElements() is invoked directly for a subset of all elements.
                                   e:
                                   elementDatas;
             for (var i=0, data; (data = elmDatasToCheck[i]); i++)
             {
               var elm = data.elm,
-                  recalc = data.live || (globalCfg.recalcOnResize && e.type === 'resize'),
-                  offs = recalc && elm.offset(),
-                  elmTop =    recalc ? (data.elmTop = offs.top) : data.elmTop,
-                  elmHeight = recalc ? (data.elmHeight = elm.outerHeight()) : data.elmHeight,
-                  elmBottom = recalc ? (data.elmBottom = elmTop + elmHeight) : data.elmBottom,
+                  recalcThis = doRecalculate || data.live,
+                  offs = recalcThis && elm.offset(),
+                  elmTop =    recalcThis ? (data.elmTop = offs.top) : data.elmTop,
+                  elmHeight = recalcThis ? (data.elmHeight = elm.outerHeight()) : data.elmHeight,
+                  elmBottom = recalcThis ? (data.elmBottom = elmTop + elmHeight) : data.elmBottom,
                   elmLeft,
                   elmWidth,
                   elmRight;
@@ -206,9 +212,9 @@
                   scrWidth  = $win.width();
                   scrRight = scrLeft + scrWidth;
                 }
-                elmLeft  = recalc ? (data.elmLeft = offs.left) : data.elmLeft;
-                elmWidth = recalc ? (data.elmWidth = elm.outerWidth()) : data.elmWidth;
-                elmRight = recalc ? (data.elmRight = elmLeft + elmWidth) : data.elmRight;
+                elmLeft  = recalcThis ? (data.elmLeft = offs.left) : data.elmLeft;
+                elmWidth = recalcThis ? (data.elmWidth = elm.outerWidth()) : data.elmWidth;
+                elmRight = recalcThis ? (data.elmRight = elmLeft + elmWidth) : data.elmRight;
               }
 
               var ev = {
@@ -219,7 +225,7 @@
                       scrWidth:    scrWidth,  // undefined unless data.leftright
                       scrRight:    scrRight,  // undefined unless data.leftright
 
-                      $elm:         elm,
+                      $elm:        elm,
                       elmTop:      elmTop,
                       elmHeight:   elmHeight,
                       elmBottom:   elmBottom,
@@ -236,49 +242,46 @@
                       lastScrLeft: lastScrLeft, // undefined during first run
 
                       leftright:   data.leftright
-                    },
-                  j = 0,
-                  range;
+                    };
 
-              while ( (range = data.ranges[j++]) )
-              {
-                var onScreen,
-                    rTop = range.top,
-                    rBottom = range.bottom;
+              $.each(data.ranges, function (rangeName, range) {
+                  var onScreen,
+                      rTop = range.top,
+                      rBottom = range.bottom;
 
-                rTop.call && (rTop = _getRangeValue(range, rTop, recalc, ev, 'top'));
-                rBottom.call && (rBottom = _getRangeValue(range, rBottom, recalc, ev,'bottom'));
+                  rTop.call && (rTop = _getRangeValue(range, rTop, recalcThis, ev, 'top'));
+                  rBottom.call && (rBottom = _getRangeValue(range, rBottom, recalcThis, ev,'bottom'));
 
-                ev.isElmBelow = elmTop-rTop >= scrBottom;
-                ev.isElmAbove = scrTop >= elmBottom+rBottom;
-                onScreen =  !ev.isElmBelow && !ev.isElmAbove;
+                  ev.isElmBelow = elmTop-rTop >= scrBottom;
+                  ev.isElmAbove = scrTop >= elmBottom+rBottom;
+                  onScreen =  !ev.isElmBelow && !ev.isElmAbove;
 
-                if ( data.leftright )
-                {
-                  var rLeft = range.left,
-                      rRight = range.right;
+                  if ( data.leftright )
+                  {
+                    var rLeft = range.left,
+                        rRight = range.right;
 
-                  rLeft.call && (rLeft = _getRangeValue(range, rLeft, recalc, ev, 'left'));
-                  rRight.call && (rRight = _getRangeValue(range, rRight, recalc, ev,'right'));
+                    rLeft.call && (rLeft = _getRangeValue(range, rLeft, recalcThis, ev, 'left'));
+                    rRight.call && (rRight = _getRangeValue(range, rRight, recalcThis, ev,'right'));
 
-                  ev.isElmRight =  elmLeft-rLeft >= scrRight;
-                  ev.isElmLeft = scrLeft >= elmRight+rRight;
-                  onScreen =  onScreen && !ev.isElmRight && !ev.isElmLeft;
-                }
+                    ev.isElmRight =  elmLeft-rLeft >= scrRight;
+                    ev.isElmLeft = scrLeft >= elmRight+rRight;
+                    onScreen =  onScreen && !ev.isElmRight && !ev.isElmLeft;
+                  }
 
-                if ( onScreen !== range.onscreen )
-                {
-                  range.onscreen = onScreen;
-                  // trigger wheno[n|ff]screen event
-                  ev.type = onScreen ? 'whenonscreen' : 'whenoffscreen';
-                  ev.range = range;
-                  elm.trigger(ev);
-                }
-              }
+                  if ( onScreen !== range.onscreen )
+                  {
+                    range.onscreen = onScreen;
+                    // trigger wheno[n|ff]screen event
+                    ev.type = (onScreen ? 'whenon' : 'whenoff') + 'screen' + (globalCfg.nsEvents ? '.'+rangeName : '');
+                    ev.range = range;
+                    elm.trigger(ev);
+                  }
+                });
+
               lastScrTop = scrTop;
-              lastScrTop = scrTop;
-
-            }
+              lastScrLeft = scrLeft;
+           }
 
           };
 
@@ -294,10 +297,7 @@
             method = opts;
             opts = arg2;
           }
-          opts = $.extend({
-                    // live:   false,
-                    // ranges: $.whenOnScreen.range
-                  }, opts);
+          opts = $.extend({}, opts);
 
           if ( method === 'run' )
           {
@@ -307,19 +307,24 @@
                           opts.ranges:
                           globalCfg.ranges;
 
-            ranges =  $.isArray( ranges ) ?
-                          ranges:
-                          [{ radius: ranges }];
-
-            for (var i=0, range; (range = ranges[i]); i++)
-            {
-              var radius = range.radius || 0;
-              if ( range.top==null )    { range.top =    radius; }
-              if ( range.bottom==null ) { range.bottom = radius; }
-              if ( range.left==null )   { range.left =   radius; }
-              if ( range.right==null )  { range.right =  radius; }
-              delete range.radius;
+            // convert old-school range Arrays to Object
+            if ( $.isArray( ranges ) ) {
+              var rangesArr = ranges;
+              ranges = {};
+              $.each(rangesArr,function (i, range) { ranges['r'+i] = range; });
             }
+            // handle Number/String shorthand radius values
+            ranges =  $.isPlainObject( ranges ) ? ranges : { visible:{ radius: ranges } };
+
+            // Normalize top, bottom, left, right values. (i.e. expand radius to handle undefined values)
+            $.each(ranges, function (i, range) {
+                var radius = range.radius || 0;
+                delete range.radius;
+                if ( range.top==null )    { range.top =    radius; }
+                if ( range.bottom==null ) { range.bottom = radius; }
+                if ( range.left==null )   { range.left =   radius; }
+                if ( range.right==null )  { range.right =  radius; }
+              });
           }
 
           var retValue = this;
@@ -338,19 +343,16 @@
                   elementDatas.splice(idx,1);
                 }
               }
-              else // /^(run|data|recalc)$/.test(method)
+              else if ( method === 'data' )
               {
-                var data = {};
-                if ( alreadyMonitored )
-                {
-                  data = elementDatas[idx];
-                }
-                if ( method === 'data' )
-                {
-                  retValue = alreadyMonitored ? data : undefined; // make the plugin return the data of the first item
-                  return false;    // immediately exit this.each() loop
-                }
-                if ( method !== 'recalc' )
+                retValue = elementDatas[idx]; // make the plugin return the data of the first item
+                return false;    // immediately exit this.each() loop
+              }
+              else // /^(run|recalc)$/.test(method)
+              {
+                var data = alreadyMonitored ? elementDatas[idx] : {};
+
+                if ( method === 'run' )
                 {
                   // Initialize and normalize (or simply update!) the data object for the current element
                   // (No need to do this if we're just recalculating the dimenstions and posision)
@@ -366,9 +368,9 @@
                   data.live = opts.live!=null ?
                                   !!opts.live:
                                   !!globalCfg.live;
-                  data.ranges = [];
-                  $.each(ranges, function () {
-                      data.ranges.push( $.extend({}, this) );
+                  data.ranges = {};
+                  $.each(ranges, function (name, range) {
+                      data.ranges[name] = $.extend({},range);
                     });
                 }
                 // check to see if ranges contain (String) percentage tokens
@@ -379,33 +381,11 @@
                         var sideLC = side.toLowerCase(),
                             rangeVal = range[sideLC];
                         range[sideLC] = rangeVal.charAt ? _percStrToFunc(rangeVal, side): rangeVal;
-                        delete range['_'+sideLC]; // purge cached values
+                        // purge cached values
+                        delete range['_'+sideLC];
                       });
                   });
-                if ( !opts.live && (!alreadyMonitored || method==='recalc') )
-                {
-                  // Measure the element's current dimensions and position
-                  // Skip this if opts.live (because then it happens inside checkElements())
-                  // Skip this if element already existed -- unless we've explicitly asked for 'recalc'
-                  var dataElm = data.elm,
-                      offs = dataElm.offset();
-                  data.elmTop =    offs.top;
-                  data.elmHeight = dataElm.outerHeight();
-                  data.elmBottom = offs.top + data.elmHeight;
-                  if ( data.leftright )
-                  {
-                    data.elmLeft =  offs.left;
-                    data.elmWidth = dataElm.outerWidth();
-                    data.elmRight = offs.left + data.elmWidth;
-                  }
-                }
-                if ( method === 'run' || !data.live )
-                {
-                  // skip this for live elements when method is 'recalc'
-                  // as the live elements may be considered up to date and correct
-                  checkElements([ data ]);
-                }
-                // WARNING: Early return above!
+                checkElements([ data ]);
               }
             });
 

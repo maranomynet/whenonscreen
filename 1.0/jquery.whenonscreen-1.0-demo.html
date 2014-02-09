@@ -27,12 +27,38 @@
       background-image: -webkit-linear-gradient( -90deg,  rgba(0,0,0, .15) 0,  transparent 1px );
       background-image:    -moz-linear-gradient( -90deg,  rgba(0,0,0, .15) 0,  transparent 1px );
       background-image:         linear-gradient( 180deg,  rgba(0,0,0, .15) 0,  transparent 1px ); /*  0°=N */
-      padding: 10px;
+      padding: 20px 10px 10px 10px;
       height: 500px;
+      position: relative;
     }
-    p.onscreen {
+    p.visible {
+      border-color: #6b5;
+      outline: 2px solid #6b5;
+    }
+    p.entered {
       background-color: #dfc;
     }
+    p:before {
+      display: block;
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      height: 1em;
+      text-align: center;
+      margin: auto;
+    }
+    p.entered:before {
+      content: "Entered";
+    }
+    p.visible:before {
+      content: "Visible";
+    }
+    p.visible.entered:before {
+      content: "Entered + Visible";
+    }
+
 
   </style>
 
@@ -46,22 +72,32 @@
           col2 = col.clone().insertAfter( col );
           col3 = col.clone().insertAfter( col2 );
 
+     $.whenOnScreen.nsEvents = true;
+
       $(document)
-          .on('whenonscreen whenoffscreen', function (e) {
-              $(e.target).toggleClass('onscreen', e.type==='whenonscreen');
+          .on('whenonscreen.visible whenoffscreen.visible', function (e) {
+              $(e.target).toggleClass('visible', e.type==='whenonscreen');
+            })
+          .on('whenonscreen.entered whenoffscreen.entered', function (e) {
+              $(e.target).toggleClass('entered', e.type==='whenonscreen');
             });
 
       col.find('p')
-          .whenOnScreen({ ranges: -100 });
+          .whenOnScreen({
+              ranges:-100
+            });
 
       col2.find('p')
           .whenOnScreen({
-              ranges:[{ radius: '-25%s' }]
+              ranges:{
+                   visible:{ radius: 0 },
+                   entered:{ radius:'-25%s' }
+                }
             })
 
       col3.find('p')
           .whenOnScreen({
-              ranges:[{ bottom: -500, top: -50  }]
+              ranges:{ entered:{ bottom:-500, top:-50 }  }
             })
 
 
