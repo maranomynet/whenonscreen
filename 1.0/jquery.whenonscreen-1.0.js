@@ -252,9 +252,16 @@
                   rTop.call && (rTop = _getRangeValue(range, rTop, recalcThis, ev, 'top'));
                   rBottom.call && (rBottom = _getRangeValue(range, rBottom, recalcThis, ev,'bottom'));
 
-                  ev.isElmBelow = elmTop-rTop >= scrBottom;
-                  ev.isElmAbove = scrTop >= elmBottom+rBottom;
-                  onScreen =  !ev.isElmBelow && !ev.isElmAbove;
+                  var isBelow = elmTop-rTop >= scrBottom;
+                  var isAbove = scrTop >= elmBottom+rBottom;
+                  if ( isBelow  && isAbove )
+                  {
+                    isBelow = isAbove = false;
+                  }
+                  elm.isElmBelow = isBelow;
+                  elm.isElmAbove = isAbove;
+
+                  onScreen =  !isBelow && !isAbove;
 
                   if ( data.leftright )
                   {
@@ -264,9 +271,16 @@
                     rLeft.call && (rLeft = _getRangeValue(range, rLeft, recalcThis, ev, 'left'));
                     rRight.call && (rRight = _getRangeValue(range, rRight, recalcThis, ev,'right'));
 
-                    ev.isElmRight =  elmLeft-rLeft >= scrRight;
-                    ev.isElmLeft = scrLeft >= elmRight+rRight;
-                    onScreen =  onScreen && !ev.isElmRight && !ev.isElmLeft;
+                    var isRight = elmLeft-rLeft >= scrRight;
+                    var isLeft =  scrLeft >= elmRight+rRight;
+                    if ( isRight && isLeft )
+                    {
+                      isRight = isLeft = false;
+                    }
+                    elm.isElmRight = isRight;
+                    elm.isElmLeft =  isLeft;
+
+                    onScreen =  onScreen && !isRight && !isLeft;
                   }
 
                   if ( onScreen !== range.onscreen )
