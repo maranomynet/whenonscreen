@@ -68,19 +68,12 @@
   <script>
     jQuery(function($){
 
-      var col = $('.col'),
-          col2 = col.clone().insertAfter( col );
-          col3 = col.clone().insertAfter( col2 );
+      var col = $('.col');
+      var col2 = col.clone().insertAfter( col );
+      var col3 = col.clone().insertAfter( col2 );
 
      $.whenOnScreen.nsEvents = true;
 
-      $(document)
-          .on('whenonscreen.visible whenoffscreen.visible', function (e) {
-              $(e.target).toggleClass('visible', e.type==='whenonscreen');
-            })
-          .on('whenonscreen.entered whenoffscreen.entered', function (e) {
-              $(e.target).toggleClass('entered', e.type==='whenonscreen');
-            });
 
       col.find('p')
           .whenOnScreen({
@@ -90,16 +83,23 @@
       col2.find('p')
           .whenOnScreen({
               ranges:{
-                   visible:{ radius: 0 },
+                   visible:{ radius: -10 },
                    entered:{ radius:'-25%s' }
                 }
-            })
+            });
 
       col3.find('p')
           .whenOnScreen({
               ranges:{ entered:{ bottom:-500, top:-50 }  }
-            })
+            });
 
+      $(document)
+          .on('whenonscreen.visible whenoffscreen.visible', function (e) {
+              $(e.target).toggleClass('visible', e.type==='whenonscreen');
+            })
+          .on('whenonscreen.entered whenoffscreen.entered', function (e) {
+              $(e.target).toggleClass('entered', e.type==='whenonscreen');
+            });
 
     });
 

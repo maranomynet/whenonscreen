@@ -399,7 +399,7 @@
                         delete range['_'+sideLC];
                       });
                   });
-                checkElements([ data ]);
+                setTimeout(checkElements, 0, [ data ]);
               }
             });
 
